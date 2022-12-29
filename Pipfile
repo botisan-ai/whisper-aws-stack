@@ -10,8 +10,8 @@ uvicorn = {extras = ["standard"], version = "*"}
 pydantic = "*"
 torch = "*"
 celery = {extras = ["redis"], version = "*"}
-torchaudio = "*"
 sounddevice = "*"
+ffmpeg = "*"
 
 [dev-packages]
 
