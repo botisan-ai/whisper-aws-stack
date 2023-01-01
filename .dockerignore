@@ -1,0 +1,17 @@
+__pycache__
+
+# exclude all CDK-related work
+
+/cdk_stack
+/cdk.out
+cdk.json
+
+.editorconfig
+
+docker-compose.yml
+Dockerfile
+
+.env*
+
+# no need to put client into the Dockerfile
+client.py

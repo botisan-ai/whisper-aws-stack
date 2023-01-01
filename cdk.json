@@ -1,0 +1,3 @@
+{
+    "app": "python -m cdk_stack.app"
+}

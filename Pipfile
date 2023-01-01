@@ -9,11 +9,14 @@ fastapi = "*"
 uvicorn = {extras = ["standard"], version = "*"}
 pydantic = "*"
 torch = "*"
-celery = {extras = ["redis"], version = "*"}
-sounddevice = "*"
+celery = {extras = ["redis", "sqs"], version = "*"}
 ffmpeg = "*"
 
 [dev-packages]
+aws-cdk-lib = "==2.58.1"
+sounddevice = "*"
+torchaudio = "*"
+aiohttp = "*"
 
 [requires]
 python_version = "3.9"

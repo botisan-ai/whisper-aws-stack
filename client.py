@@ -1,21 +1,16 @@
 import asyncio
-import websockets
+# import websockets
 import sounddevice as sd
 import numpy as np
 import torch
+import aiohttp
+from base64 import b64encode
 
 sd.default.samplerate = 16000
 sd.default.device = 'MacBook Pro Microphone'
 sd.default.channels = 1
 sd.default.dtype = 'float32'
 sd.default.blocksize = int(16000 / 1000 * 50)
-
-# async def hello():
-#     async with websockets.connect("ws://localhost:6666/stream/test") as websocket:
-#         await websocket.send(b"Hello world!")
-#         await websocket.close()
-
-# asyncio.run(hello())
 
 model, silero_utils = torch.hub.load('snakers4/silero-vad', 'silero_vad', force_reload=False)
 
@@ -30,27 +25,45 @@ async def get_voice_buffer_from_microphone():
 
     with stream:
         consecutive_silence = 0
-        buffer = b''
+        has_voice = False
+        buffers = []
         while True:
             data: np.ndarray = await queue.get()
             confidence = model(torch.from_numpy(data), sd.default.samplerate).item()
             if confidence > 0.5:
+                has_voice = True
                 consecutive_silence = 0
-                buffer += data.tobytes()
+                buffers.append(data.tobytes())
             else:
-                consecutive_silence += 1
-                if consecutive_silence > 5 and len(buffer) > 0:
-                    yield buffer
+                if has_voice:
+                    consecutive_silence += 1
+                    buffers.append(data.tobytes())
+                else:
+                    buffers.append(data.tobytes())
+                    # always keep the last 5 buffered items
+                    buffers = buffers[-5:]
+                if consecutive_silence > 5 and len(buffers) > 10:
+                    yield b''.join(buffers)
                     consecutive_silence = 0
-                    buffer = b''
+                    has_voice = False
+                    buffers = []
 
 async def main():
     print('Main app ready')
-    async with websockets.connect("ws://localhost:6666/stream/test") as websocket:
-        print('Connected to websocket server')
-        async for data in get_voice_buffer_from_microphone():
-            await websocket.send(data)
+    # async with websockets.connect("ws://localhost:6666/stream/test") as websocket:
+    #     print('Connected to websocket server')
+        # async for data in get_voice_buffer_from_microphone():
+        # await websocket.send(data)
         # await websocket.close()
+
+    async with aiohttp.ClientSession() as session:
+        async for data in get_voice_buffer_from_microphone():
+            async with session.post('http://localhost:6666/transcribe', json={ 'audio': b64encode(data).decode() }) as transcribe_response:
+                transcribe_response_json = await transcribe_response.json()
+                transcription_id = transcribe_response_json.get('transcription_id')
+                async with session.get(f'http://localhost:6666/transcription/{transcription_id}') as transcription_response:
+                    transcription_response_json = await transcription_response.json()
+                    print(transcription_response_json.get('transcription'))
 
 if __name__ == '__main__':
     asyncio.run(main())
