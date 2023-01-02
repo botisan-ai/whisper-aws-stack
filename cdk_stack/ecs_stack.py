@@ -62,16 +62,16 @@ class WhisperServerECSStack(Stack):
                     upper=0,
                     change=-1,
                 ),
-                autoscaling.ScalingInterval(
-                    lower=1,
-                    change=1,
-                ),
+                # autoscaling.ScalingInterval(
+                #     lower=1,
+                #     change=1,
+                # ),
                 autoscaling.ScalingInterval(
                     lower=50,
                     change=1,
                 ),
             ],
-            min_scaling_capacity=0,
+            min_scaling_capacity=1,
             max_scaling_capacity=2,
         )
 

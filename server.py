@@ -4,6 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from asyncio import sleep
 from pydantic import BaseModel
 from celery.result import AsyncResult
+from uuid import uuid4
+import aioboto3
+from base64 import b64decode
 
 # from fastapi import WebSocket
 # from starlette.concurrency import run_until_first_complete
@@ -11,6 +14,7 @@ from celery.result import AsyncResult
 # from celery.result import AsyncResult
 
 from celery_app import celery_app
+from constants import S3_BUCKET
 
 app = FastAPI()
 
@@ -32,11 +36,22 @@ class TranscriptionOutput(BaseModel):
 
 @app.post("/transcribe")
 async def transcribe_audio(input: TranscriptionInput):
-    result = celery_app.send_task(
-        'realtime_tasks.process_audio_stream',
-        args=[input.audio, ''],
-    )
-    return TranscriptionOutput(transcription_id=result.id)
+    session = aioboto3.Session()
+    async with session.client('s3') as s3_client:
+        task_id = str(uuid4())
+        key = f'voice-{task_id}'
+        await s3_client.put_object(
+            Bucket=S3_BUCKET,
+            Key=key,
+            Body=b64decode(input.audio)
+        )
+        # TODO: 3rd argument for multi-tenancy
+        result = celery_app.send_task(
+            'realtime_tasks.process_audio_stream',
+            task_id=task_id,
+            args=[S3_BUCKET, key, ''],
+        )
+        return TranscriptionOutput(transcription_id=result.id)
 
 @app.get("/transcription/{transcription_id}")
 async def get_transcription(transcription_id: str):

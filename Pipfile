@@ -11,6 +11,7 @@ pydantic = "*"
 torch = "*"
 celery = {extras = ["redis", "sqs"], version = "*"}
 ffmpeg = "*"
+aioboto3 = "*"
 
 [dev-packages]
 aws-cdk-lib = "==2.58.1"
