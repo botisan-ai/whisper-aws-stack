@@ -3,7 +3,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from asyncio import sleep
 from pydantic import BaseModel
-from base64 import b64decode
 from celery.result import AsyncResult
 
 # from fastapi import WebSocket
@@ -33,10 +32,9 @@ class TranscriptionOutput(BaseModel):
 
 @app.post("/transcribe")
 async def transcribe_audio(input: TranscriptionInput):
-    audio = b64decode(input.audio)
     result = celery_app.send_task(
         'realtime_tasks.process_audio_stream',
-        args=[audio, ''],
+        args=[input.audio, ''],
     )
     return TranscriptionOutput(transcription_id=result.id)
 
@@ -45,7 +43,8 @@ async def get_transcription(transcription_id: str):
     result = AsyncResult(transcription_id, app=celery_app)
     while not result.ready():
         await sleep(0.1)
-    transcription = result.get()
+    response = result.get()
+    transcription = response.get('transcription')
     return TranscriptionOutput(transcription_id=transcription_id, transcription=transcription)
 
 # channels: Dict[str, Queue] = {}

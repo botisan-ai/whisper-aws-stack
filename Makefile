@@ -11,3 +11,9 @@ worker: realtime-worker slow-worker
 
 server:
 	uvicorn server:app --host 0.0.0.0 --port 6666
+
+deploy:
+	cdk deploy --outputs-file cdk.out/outputs.json $(args)
+
+destroy:
+	cdk destroy $(args)
