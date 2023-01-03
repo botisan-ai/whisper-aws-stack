@@ -10,7 +10,7 @@ processor = WhisperProcessor.from_pretrained("openai/whisper-large-v2", device=d
 model = WhisperForConditionalGeneration.from_pretrained("openai/whisper-large-v2", device=device, load_in_8bit=True)
 model.config.forced_decoder_ids = processor.get_decoder_prompt_ids(language='zh', task='transcribe')
 
-@celery_app.task(acks_late=True)
+@celery_app.task(acks_late=True, ignore_result=True)
 def process_audio_stream(audio: bytes, stream_id: str) -> str:
     inputs = processor(np.frombuffer(audio, dtype=np.float32), sampling_rate=16000, return_tensors="pt")
     input_features = inputs.input_features.half().to(device)

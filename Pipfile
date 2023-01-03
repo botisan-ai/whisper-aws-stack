@@ -12,6 +12,7 @@ torch = "*"
 celery = {extras = ["redis", "sqs"], version = "*"}
 ffmpeg = "*"
 aioboto3 = "*"
+opensearch-py = "*"
 
 [dev-packages]
 aws-cdk-lib = "==2.58.1"

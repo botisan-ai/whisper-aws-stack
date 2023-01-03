@@ -7,6 +7,7 @@ from celery.result import AsyncResult
 from uuid import uuid4
 import aioboto3
 from base64 import b64decode
+import time
 
 # from fastapi import WebSocket
 # from starlette.concurrency import run_until_first_complete
@@ -40,6 +41,7 @@ async def transcribe_audio(input: TranscriptionInput):
     async with session.client('s3') as s3_client:
         task_id = str(uuid4())
         key = f'voice-{task_id}'
+        timestamp = time.time()
         await s3_client.put_object(
             Bucket=S3_BUCKET,
             Key=key,
@@ -49,7 +51,7 @@ async def transcribe_audio(input: TranscriptionInput):
         result = celery_app.send_task(
             'realtime_tasks.process_audio_stream',
             task_id=task_id,
-            args=[S3_BUCKET, key, ''],
+            args=[S3_BUCKET, task_id, timestamp, ''],
         )
         return TranscriptionOutput(transcription_id=result.id)
 

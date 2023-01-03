@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "421e619d5c5c0d116e1efe45e5d10da56ff18271db18f687c2e2543c9d829329"
+            "sha256": "a6c6bd56d4ee4164173dd1270b7dd9b08562a1847075c58e1b92aa7906d078ee"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -239,7 +239,7 @@
                 "sha256:a0713dc7a1de3f06bc0df5a9567ad19ead2d3d5689b434768a6145bff77c0667",
                 "sha256:f184f0d851d96b6d29297354ed981b7dd71df7ff500d82fa6d11f0856bee8035"
             ],
-            "markers": "python_version < '4.0' and python_full_version >= '3.6.2'",
+            "markers": "python_full_version >= '3.6.2' and python_full_version < '4.0.0'",
             "version": "==0.3.0"
         },
         "click-plugins": {
@@ -559,6 +559,14 @@
             "markers": "python_version >= '3.8'",
             "version": "==1.24.1"
         },
+        "opensearch-py": {
+            "hashes": [
+                "sha256:884be795af6a1d31e63cf45fceb51334108e4c74eac73a5df18ce9851e9c9da4",
+                "sha256:daa5eb2279b89bf15d63312a922bd5ab7f266d3c2737e48dec6ff862d7b1838a"
+            ],
+            "index": "pypi",
+            "version": "==2.0.1"
+        },
         "packaging": {
             "hashes": [
                 "sha256:2198ec20bd4c017b8f9717e00f0c8714076fc2fd93816750ab48e2c41de2cfd3",
@@ -797,7 +805,7 @@
                 "sha256:7c5599b102feddaa661c826c56ab4fee28bfd17f5abca1ebbe3e7f19d7c97983",
                 "sha256:8fefa2a1a1365bf5520aac41836fbee479da67864514bdb821f31ce07ce65349"
             ],
-            "markers": "python_version >= '3.7' and python_version < '4.0'",
+            "markers": "python_version >= '3.7' and python_full_version < '4.0.0'",
             "version": "==2.28.1"
         },
         "s3transfer": {
@@ -929,6 +937,7 @@
                 "sha256:47cc05d99aaa09c9e72ed5809b60e7ba354e64b59c9c173ac3018642d8bb41fc",
                 "sha256:c083dd0dce68dbfbe1129d5271cb90f9447dea7d52097c6e0126120c521ddea8"
             ],
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5'",
             "version": "==1.26.13"
         },
         "uvicorn": {
@@ -1395,7 +1404,7 @@
                 "sha256:bc12b1f0d000b9f9bee83335887d532a1d3e99a833d1bf0882151c97d3e68c21",
                 "sha256:f0eed5642399423cf656e7b66ce92cdc5b963ecafd041d1b24d136fdde7acf6d"
             ],
-            "markers": "python_full_version >= '3.7.0'",
+            "markers": "python_version >= '3.7'",
             "version": "==22.2.0"
         },
         "cffi": {
