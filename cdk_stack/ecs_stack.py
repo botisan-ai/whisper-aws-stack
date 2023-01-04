@@ -118,7 +118,7 @@ class WhisperServerECSStack(Stack):
             # memory_limit_mib=15360,
             memory_reservation_mib=15360,
             image=ecs.ContainerImage.from_ecr_repository(ecr_repo, tag='latest'),
-            command=["celery", "-A", "slow_tasks", "worker", "-l", "info", "-Q", "celery,whisper-slow"],
+            command=["celery", "-A", "slow_tasks", "worker", "-l", "info", "-Q", "celery,whisper-slow", "-P", "solo"],
             environment=environment,
             queue=self.slow_queue,
             capacity_provider_strategies=[
