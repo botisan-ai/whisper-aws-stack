@@ -10,7 +10,12 @@ model = WhisperForConditionalGeneration.from_pretrained("openai/whisper-tiny")
 model.config.forced_decoder_ids = processor.get_decoder_prompt_ids(language='zh', task='transcribe')
 
 @celery_app.task(acks_late=True)
-def process_audio_stream(bucket: str, task_id: str, timestamp: float, stream_id: str) -> Dict[str, Any]:
+def process_audio_stream(
+    bucket: str,
+    task_id: str,
+    timestamp: float,
+    stream_id: str,
+) -> Dict[str, Any]:
     s3 = boto3.resource('s3')
     obj = s3.Object(bucket, f'voice-{task_id}')
     audio_bytes: bytes = obj.get()['Body'].read()
