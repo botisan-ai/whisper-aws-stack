@@ -13,6 +13,8 @@ celery = {extras = ["redis", "sqs"], version = "*"}
 ffmpeg = "*"
 aioboto3 = "*"
 opensearch-py = "*"
+bitsandbytes = "*"
+accelerate = "*"
 
 [dev-packages]
 aws-cdk-lib = "==2.58.1"

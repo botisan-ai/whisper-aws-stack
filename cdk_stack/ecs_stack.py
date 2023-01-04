@@ -89,6 +89,8 @@ class WhisperServerECSStack(Stack):
             machine_image=ecs.EcsOptimizedImage.amazon_linux2(hardware_type=ecs.AmiHardwareType.GPU),
             instance_type=ec2.InstanceType("g5.xlarge"),
             vpc=self.vpc,
+            min_capacity=0,
+            max_capacity=1,
         )
 
         capacity_provider = ecs.AsgCapacityProvider(
@@ -132,8 +134,13 @@ class WhisperServerECSStack(Stack):
             max_scaling_capacity=1,
         )
 
+        self.celery_queue.grant_send_messages(self.realtime_service.task_definition.task_role)
+        self.celery_queue.grant_send_messages(self.slow_service.task_definition.task_role)
         self.celery_queue.grant_consume_messages(self.realtime_service.task_definition.task_role)
         self.celery_queue.grant_consume_messages(self.slow_service.task_definition.task_role)
+
+        # allow real-time task to send messages to the slow queue
+        self.slow_queue.grant_send_messages(self.realtime_service.task_definition.task_role)
 
         self.task_result_bucket.grant_read_write(self.realtime_service.task_definition.task_role)
         self.task_result_bucket.grant_read_write(self.slow_service.task_definition.task_role)
