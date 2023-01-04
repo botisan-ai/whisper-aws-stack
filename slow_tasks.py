@@ -4,10 +4,10 @@ import torch
 
 from celery_app import celery_app
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
-processor = WhisperProcessor.from_pretrained("openai/whisper-large-v2", device=device, load_in_8bit=True)
-model = WhisperForConditionalGeneration.from_pretrained("openai/whisper-large-v2", device=device, load_in_8bit=True)
+processor = WhisperProcessor.from_pretrained("openai/whisper-large-v2", load_in_8bit=True)
+model = WhisperForConditionalGeneration.from_pretrained("openai/whisper-large-v2", device_map='auto', load_in_8bit=True)
 model.config.forced_decoder_ids = processor.get_decoder_prompt_ids(language='zh', task='transcribe')
 
 @celery_app.task(acks_late=True, ignore_result=True)

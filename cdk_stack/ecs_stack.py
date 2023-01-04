@@ -88,6 +88,16 @@ class WhisperServerECSStack(Stack):
             self, "whisper-gpu-asg",
             machine_image=ecs.EcsOptimizedImage.amazon_linux2(hardware_type=ecs.AmiHardwareType.GPU),
             instance_type=ec2.InstanceType("g5.xlarge"),
+            block_devices=[
+                autoscaling.BlockDevice(
+                    device_name="/dev/xvda",
+                    volume=autoscaling.BlockDeviceVolume.ebs(
+                        100,
+                        volume_type=autoscaling.EbsDeviceVolumeType.GP3,
+                        delete_on_termination=True,
+                    ),
+                )
+            ],
             vpc=self.vpc,
             min_capacity=0,
             max_capacity=1,
@@ -105,7 +115,8 @@ class WhisperServerECSStack(Stack):
             cluster=self.cluster,
             gpu_count=1,
             cpu=4096,
-            memory_limit_mib=12288,
+            # memory_limit_mib=15360,
+            memory_reservation_mib=15360,
             image=ecs.ContainerImage.from_ecr_repository(ecr_repo, tag='latest'),
             command=["celery", "-A", "slow_tasks", "worker", "-l", "info", "-Q", "celery,whisper-slow"],
             environment=environment,
