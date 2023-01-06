@@ -17,3 +17,6 @@ deploy:
 
 destroy:
 	cdk destroy $(args)
+
+install-pycurl-mac:
+	pip install --no-cache-dir --compile --ignore-installed --install-option="--with-openssl" --install-option="--openssl-dir=/usr/local/opt/openssl@1.1" pycurl
