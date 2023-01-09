@@ -33,17 +33,17 @@ async def get_voice_buffer_from_microphone():
             if confidence > 0.5:
                 has_voice = True
                 consecutive_silence = 0
-                buffers.append(data.tobytes())
+                buffers.append(data)
             else:
                 if has_voice:
                     consecutive_silence += 1
-                    buffers.append(data.tobytes())
+                    buffers.append(data)
                 else:
-                    buffers.append(data.tobytes())
+                    buffers.append(data)
                     # always keep the last 5 buffered items
                     buffers = buffers[-5:]
                 if consecutive_silence > 5 and len(buffers) > 10:
-                    yield b''.join(buffers)
+                    yield b''.join([d.tobytes() for d in buffers])
                     consecutive_silence = 0
                     has_voice = False
                     buffers = []

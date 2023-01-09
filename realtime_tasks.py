@@ -2,6 +2,7 @@ from typing import Dict, Any
 from transformers import WhisperProcessor, WhisperForConditionalGeneration
 import numpy as np
 import boto3
+import struct
 
 from celery_app import celery_app
 
@@ -20,7 +21,9 @@ def process_audio_stream(
     obj = s3.Object(bucket, f'voice-{task_id}')
     audio_bytes: bytes = obj.get()['Body'].read()
 
-    audio_ndarray = np.frombuffer(audio_bytes, dtype=np.float32)
+    audio_float_array = struct.unpack('>f', audio_bytes)
+    audio_ndarray = np.array(audio_float_array, dtype=np.float32)
+    # audio_ndarray = np.frombuffer(audio_bytes, dtype=np.float32)
 
     inputs = processor(audio_ndarray, sampling_rate=16000, return_tensors="pt")
     input_features = inputs.input_features
