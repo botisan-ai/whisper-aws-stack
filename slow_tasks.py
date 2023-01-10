@@ -1,10 +1,25 @@
 from transformers import WhisperProcessor, WhisperForConditionalGeneration
+from opensearchpy import OpenSearch, RequestsHttpConnection
+from requests_aws4auth import AWS4Auth
 import numpy as np
 import torch
 import boto3
 import struct
 
+from constants import AWS_REGION, OPENSEARCH_HOST
 from celery_app import celery_app
+
+service = 'es'
+credentials = boto3.Session().get_credentials()
+awsauth = AWS4Auth(credentials.access_key, credentials.secret_key, AWS_REGION, service, session_token=credentials.token)
+
+search = OpenSearch(
+    hosts = [{'host': OPENSEARCH_HOST, 'port': 443}],
+    http_auth = awsauth,
+    use_ssl = True,
+    verify_certs = True,
+    connection_class = RequestsHttpConnection
+)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -24,7 +39,7 @@ def process_audio_stream(
     obj = s3.Object(bucket, f'voice-{task_id}')
     audio_bytes: bytes = obj.get()['Body'].read()
 
-    audio_float_array = struct.unpack('>f', audio_bytes)
+    audio_float_array = struct.unpack(f'>{len(audio_bytes) // 4}f', audio_bytes)
     audio_ndarray = np.array(audio_float_array, dtype=np.float32)
     # audio_ndarray = np.frombuffer(audio_bytes, dtype=np.float32)
 
@@ -35,5 +50,19 @@ def process_audio_stream(
 
     print(f'from realtime: {transcription_from_realtime}')
     print(f'whisper large: {transcription}')
+
+    document = {
+        'timestamp': timestamp,
+        'transcription_tiny': transcription_from_realtime,
+        'transcription_large': transcription,
+        # 'stream_id': stream_id,
+    }
+
+    search.index(
+        index='transcriptions',
+        doc_type='_doc',
+        id=task_id,
+        document=document,
+    )
 
     return transcription

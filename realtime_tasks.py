@@ -21,7 +21,7 @@ def process_audio_stream(
     obj = s3.Object(bucket, f'voice-{task_id}')
     audio_bytes: bytes = obj.get()['Body'].read()
 
-    audio_float_array = struct.unpack('>f', audio_bytes)
+    audio_float_array = struct.unpack(f'>{len(audio_bytes) // 4}f', audio_bytes)
     audio_ndarray = np.array(audio_float_array, dtype=np.float32)
     # audio_ndarray = np.frombuffer(audio_bytes, dtype=np.float32)
 

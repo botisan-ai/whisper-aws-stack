@@ -32,6 +32,19 @@ class WhisperServerECSStack(Stack):
 
         self.slow_queue = sqs.Queue(self, "whisper-server-slow-queue")
 
+        self.opensearch_domain = opensearch.Domain(
+            self, "whisper-server-search-domain",
+            version=opensearch.EngineVersion.open_search('2.3'),
+            ebs=opensearch.EbsOptions(
+                volume_size=100,
+                volume_type=ec2.EbsDeviceVolumeType.GP3
+            ),
+            capacity=opensearch.CapacityConfig(
+                data_nodes=1,
+                data_node_instance_type='t3.small.search',
+            ),
+        )
+
         self.cluster = ecs.Cluster(self, "whisper-server-cluster", vpc=self.vpc)
 
         self.cluster.enable_fargate_capacity_providers()
@@ -44,6 +57,7 @@ class WhisperServerECSStack(Stack):
             "CELERY_QUEUE_URL": self.celery_queue.queue_url,
             "REALTIME_QUEUE_URL": self.realtime_queue.queue_url,
             "SLOW_QUEUE_URL": self.slow_queue.queue_url,
+            "OPENSEARCH_HOST": self.opensearch_domain.domain_endpoint,
         }
 
         self.realtime_service = ecs_patterns.QueueProcessingFargateService(
@@ -80,14 +94,15 @@ class WhisperServerECSStack(Stack):
                 #     change=1,
                 # ),
             ],
-            min_scaling_capacity=0,
+            min_scaling_capacity=1,
             max_scaling_capacity=1,
         )
 
         auto_scaling_group = autoscaling.AutoScalingGroup(
             self, "whisper-gpu-asg",
             machine_image=ecs.EcsOptimizedImage.amazon_linux2(hardware_type=ecs.AmiHardwareType.GPU),
-            instance_type=ec2.InstanceType("g5.xlarge"),
+            # instance_type=ec2.InstanceType("g5.xlarge"),
+            instance_type=ec2.InstanceType("g4dn.xlarge"),
             block_devices=[
                 autoscaling.BlockDevice(
                     device_name="/dev/xvda",
@@ -141,7 +156,7 @@ class WhisperServerECSStack(Stack):
                 #     change=1,
                 # ),
             ],
-            min_scaling_capacity=0,
+            min_scaling_capacity=1,
             max_scaling_capacity=1,
         )
 
@@ -155,18 +170,5 @@ class WhisperServerECSStack(Stack):
 
         self.task_result_bucket.grant_read_write(self.realtime_service.task_definition.task_role)
         self.task_result_bucket.grant_read_write(self.slow_service.task_definition.task_role)
-
-        self.opensearch_domain = opensearch.Domain(
-            self, "whisper-server-search-domain",
-            version=opensearch.EngineVersion.open_search('2.3'),
-            ebs=opensearch.EbsOptions(
-                volume_size=100,
-                volume_type=ec2.EbsDeviceVolumeType.GP3
-            ),
-            capacity=opensearch.CapacityConfig(
-                data_nodes=1,
-                data_node_instance_type='t3.small.search',
-            ),
-        )
 
         self.opensearch_domain.grant_read_write(self.slow_service.task_definition.task_role)

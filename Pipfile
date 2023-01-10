@@ -15,6 +15,7 @@ aioboto3 = "*"
 opensearch-py = "*"
 bitsandbytes = "*"
 accelerate = "*"
+requests-aws4auth = "*"
 
 [dev-packages]
 aws-cdk-lib = "==2.58.1"
