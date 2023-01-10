@@ -35,6 +35,10 @@ class TranscriptionOutput(BaseModel):
     transcription_id: str
     transcription: Optional[str]
 
+@app.get("/")
+async def root():
+    return {"status": "OK"}
+
 @app.post("/transcribe")
 async def transcribe_audio(input: TranscriptionInput):
     session = aioboto3.Session()
