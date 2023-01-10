@@ -53,16 +53,17 @@ def process_audio_stream(
 
     document = {
         'timestamp': timestamp,
-        'transcription_tiny': transcription_from_realtime,
-        'transcription_large': transcription,
+        'bucket': bucket,
+        'key': f'voice-{task_id}',
+        'transcript_tiny': transcription_from_realtime,
+        'transcript_large': transcription,
         # 'stream_id': stream_id,
     }
 
     search.index(
         index='transcriptions',
-        doc_type='_doc',
+        body=document,
         id=task_id,
-        document=document,
     )
 
     return transcription

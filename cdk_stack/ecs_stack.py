@@ -60,6 +60,32 @@ class WhisperServerECSStack(Stack):
             "OPENSEARCH_HOST": self.opensearch_domain.domain_endpoint,
         }
 
+        self.main_service = ecs_patterns.ApplicationLoadBalancedFargateService(
+            self, "whisper-main",
+            cluster=self.cluster,
+            assign_public_ip=True,
+            cpu=512,
+            memory_limit_mib=1024,
+            task_image_options=ecs_patterns.ApplicationLoadBalancedTaskImageOptions(
+                image=ecs.ContainerImage.from_ecr_repository(ecr_repo, tag='latest'),
+                command=["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "80"],
+                environment=environment,
+                enable_logging=True,
+            ),
+            capacity_provider_strategies=[
+                ecs.CapacityProviderStrategy(
+                    capacity_provider="FARGATE",
+                    weight=1
+                ),
+                ecs.CapacityProviderStrategy(
+                    capacity_provider="FARGATE_SPOT",
+                    weight=0
+                ),
+            ],
+            listener_port=80,
+            desired_count=1,
+        )
+
         self.realtime_service = ecs_patterns.QueueProcessingFargateService(
             self, "whisper-realtime",
             cluster=self.cluster,
@@ -160,15 +186,22 @@ class WhisperServerECSStack(Stack):
             max_scaling_capacity=1,
         )
 
+        self.celery_queue.grant_send_messages(self.main_service.task_definition.task_role)
         self.celery_queue.grant_send_messages(self.realtime_service.task_definition.task_role)
         self.celery_queue.grant_send_messages(self.slow_service.task_definition.task_role)
+        self.celery_queue.grant_consume_messages(self.main_service.task_definition.task_role)
         self.celery_queue.grant_consume_messages(self.realtime_service.task_definition.task_role)
         self.celery_queue.grant_consume_messages(self.slow_service.task_definition.task_role)
+
+        self.realtime_queue.grant_send_messages(self.main_service.task_definition.task_role)
+        self.slow_queue.grant_send_messages(self.main_service.task_definition.task_role)
 
         # allow real-time task to send messages to the slow queue
         self.slow_queue.grant_send_messages(self.realtime_service.task_definition.task_role)
 
+        self.task_result_bucket.grant_read_write(self.main_service.task_definition.task_role)
         self.task_result_bucket.grant_read_write(self.realtime_service.task_definition.task_role)
         self.task_result_bucket.grant_read_write(self.slow_service.task_definition.task_role)
 
+        self.opensearch_domain.grant_read_write(self.main_service.task_definition.task_role)
         self.opensearch_domain.grant_read_write(self.slow_service.task_definition.task_role)
