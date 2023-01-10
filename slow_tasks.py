@@ -1,6 +1,7 @@
 from transformers import WhisperProcessor, WhisperForConditionalGeneration
 from opensearchpy import OpenSearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
+from datetime import datetime
 import numpy as np
 import torch
 import boto3
@@ -52,7 +53,7 @@ def process_audio_stream(
     print(f'whisper large: {transcription}')
 
     document = {
-        'timestamp': timestamp,
+        'timestamp': datetime.utcfromtimestamp(timestamp).isoformat(),
         'bucket': bucket,
         'key': f'voice-{task_id}',
         'transcript_tiny': transcription_from_realtime,
