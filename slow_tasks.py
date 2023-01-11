@@ -14,13 +14,7 @@ service = 'es'
 credentials = boto3.Session().get_credentials()
 awsauth = AWS4Auth(credentials.access_key, credentials.secret_key, AWS_REGION, service, session_token=credentials.token)
 
-search = OpenSearch(
-    hosts = [{'host': OPENSEARCH_HOST, 'port': 443}],
-    http_auth = awsauth,
-    use_ssl = True,
-    verify_certs = True,
-    connection_class = RequestsHttpConnection
-)
+
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -51,6 +45,14 @@ def process_audio_stream(
 
     print(f'from realtime: {transcription_from_realtime}')
     print(f'whisper large: {transcription}')
+
+    search = OpenSearch(
+        hosts = [{'host': OPENSEARCH_HOST, 'port': 443}],
+        http_auth = awsauth,
+        use_ssl = True,
+        verify_certs = True,
+        connection_class = RequestsHttpConnection
+    )
 
     document = {
         'timestamp': datetime.utcfromtimestamp(timestamp).isoformat(),
